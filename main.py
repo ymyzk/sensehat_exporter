@@ -1,6 +1,6 @@
-from wsgiref.simple_server import make_server, WSGIRequestHandler
+import time
 
-from prometheus_client import Gauge, make_wsgi_app
+from prometheus_client import start_http_server
 from prometheus_client.core import GaugeMetricFamily, REGISTRY
 from sense_hat import SenseHat
 
@@ -12,11 +12,15 @@ class CustomCollector(object):
     def collect(self):
         humidity = self.client.get_humidity()
         if 0 <= humidity <= 100:
-            g = GaugeMetricFamily("sensehat_humidity", "Relative humidity %", labels=["sensor"])
+            g = GaugeMetricFamily("sensehat_humidity",
+                                  "Relative humidity %",
+                                  labels=["sensor"])
             g.add_metric(["HTS221"], humidity)
             yield g
 
-        g = GaugeMetricFamily("sensehat_temperature", "Temperature in degrees Celsius", labels=["sensor"])
+        g = GaugeMetricFamily("sensehat_temperature",
+                              "Temperature in degrees Celsius",
+                              labels=["sensor"])
         temp = self.client.get_temperature_from_humidity()
         if -100 <= temp <= 100:
             g.add_metric(["HTS221"], temp)
@@ -27,14 +31,10 @@ class CustomCollector(object):
 
         pressure = self.client.get_pressure()
         if 500 <= pressure <= 1500:
-            g = GaugeMetricFamily("sensehat_pressure", "Pressure in hPa", labels=["sensor"])
+            g = GaugeMetricFamily("sensehat_pressure", "Pressure in hPa",
+                                  labels=["sensor"])
             g.add_metric(["LPS25H"], pressure)
             yield g
-
-
-class NoLoggingWSGIRequestHandler(WSGIRequestHandler):
-    def log_message(self, format, *args):
-        pass
 
 
 if __name__ == '__main__':
@@ -43,6 +43,6 @@ if __name__ == '__main__':
     host = "0.0.0.0"
     port = 9542
     print("Listening on %s:%d" % (host, port))
-    app = make_wsgi_app()
-    httpd = make_server(host, port, app,  handler_class=NoLoggingWSGIRequestHandler)
-    httpd.serve_forever()
+    start_http_server(port, host)
+    while True:
+        time.sleep(1)
