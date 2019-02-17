@@ -1,8 +1,4 @@
-import time
-
-from prometheus_client import start_http_server
-from prometheus_client.core import GaugeMetricFamily, REGISTRY
-from sense_hat import SenseHat
+from prometheus_client.core import GaugeMetricFamily
 
 
 class CustomCollector(object):
@@ -35,14 +31,3 @@ class CustomCollector(object):
                                   labels=["sensor"])
             g.add_metric(["LPS25H"], pressure)
             yield g
-
-
-if __name__ == '__main__':
-    REGISTRY.register(CustomCollector(SenseHat()))
-
-    host = "0.0.0.0"
-    port = 9542
-    print("Listening on %s:%d" % (host, port))
-    start_http_server(port, host)
-    while True:
-        time.sleep(1)
